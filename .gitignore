@@ -1,0 +1,6 @@
+# Project exclude paths
+/venv/
+/datasets/
+/preweights/
+/算法*
+/.idea/
