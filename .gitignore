@@ -2,8 +2,7 @@
 /venv/
 /datasets/
 /preweights/
-/算法*
+算法*
 /.idea/
-*.h5
-*.jpg
+*.h5*.jpg
 *.csv
