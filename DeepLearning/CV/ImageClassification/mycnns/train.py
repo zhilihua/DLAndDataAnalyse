@@ -19,8 +19,8 @@ def get_nb_files(dirs):
 def train():
     epochs = 200
     n_classes = 5
-    batch_train = 25
-    batch_test = 10
+    batch_train = 64
+    batch_test = 20
     image_w = 224
     image_h = 224
     # 导入数据
@@ -47,8 +47,8 @@ def train():
     ############################################################################
     params = dict(  # rescale=1./255,
         rotation_range=40,
-        width_shift_range=0.1,
-        height_shift_range=0.1,
+        width_shift_range=0.2,
+        height_shift_range=0.2,
         shear_range=0.2,
         zoom_range=0.2,
         horizontal_flip=True,
@@ -74,7 +74,7 @@ def train():
     model.summary()
 
     # 编译模型
-    optimizer = optimizers.Adam(lr=0.0002)
+    optimizer = optimizers.Adam(lr=0.0005)
 
     model.compile(optimizer=optimizer, loss='categorical_crossentropy',
                   metrics=['acc'])
