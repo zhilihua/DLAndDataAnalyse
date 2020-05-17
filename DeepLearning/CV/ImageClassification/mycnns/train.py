@@ -17,7 +17,7 @@ def get_nb_files(dirs):
     return cnt
 #训练模型
 def train():
-    epochs = 200
+    epochs = 300
     n_classes = 5
     batch_train = 64
     batch_test = 20
