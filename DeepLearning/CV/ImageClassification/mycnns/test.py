@@ -15,19 +15,19 @@ def predict(model, img, target_size):
     preds = model.predict(x)
     return preds[0]
 
-def plot_preds(image, preds):
+def plot_preds(image, preds, p):
     index = np.argmax(preds)
 
     labels = ['daisy', 'dandelion', 'roses', 'sunflowers', 'tulips']
 
     plt.imshow(image)
     plt.axis('off')
-    plt.title(labels[index]+':'+'%s'%preds[index])
+    plt.title("come from %s==>" %p+labels[index]+':'+'%s'%preds[index])
     plt.show()
 
 if __name__ == '__main__':
     import os
-    target_size = (112, 112)
+    target_size = (224, 224)
 
     imagesPath = []
     image_path = '../../../../datasets/testdatas/flowers'
@@ -43,4 +43,5 @@ if __name__ == '__main__':
         img = Image.open(p)
         preds = predict(model, img, target_size)
         #print(preds)
-        plot_preds(img, preds)
+        p = p.split('\\')[-1]
+        plot_preds(img, preds, p)
