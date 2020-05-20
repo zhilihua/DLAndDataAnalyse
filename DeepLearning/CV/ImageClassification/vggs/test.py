@@ -26,6 +26,7 @@ def plot_preds(image, preds, p):
     plt.show()
 
 if __name__ == '__main__':
+    print("这个是vgg")
     import os
     target_size = (224, 224)
 
@@ -36,7 +37,8 @@ if __name__ == '__main__':
             path = os.path.join(image_path, file)
             imagesPath.append(path)
 
-    path_model = 'saveWeights/vgg11Model.h5'   #加载自己学习的vgg11模型
+    # path_model = 'saveWeights/vgg11Model.h5'   #加载自己学习的vgg11模型
+    path_model = 'saveWeights/vgg11Model.h5'    #加载自己学习的vgg16迁移模型
     model = load_model(path_model)
 
     for p in imagesPath:
