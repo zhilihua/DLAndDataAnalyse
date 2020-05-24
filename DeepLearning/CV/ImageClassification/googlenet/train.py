@@ -1,5 +1,5 @@
 from tensorflow.keras import Input, optimizers
-from DeepLearning.CV.tools.ClassAug.readDir import dataGenerator, PreDataForVGG
+from DeepLearning.CV.tools.ClassAug.readDir import dataGenerator, PreDataForTF
 import math
 import os
 import glob
@@ -53,10 +53,10 @@ def train():
         zoom_range=0.2,
         horizontal_flip=True,
         vertical_flip=True,
-        preprocessing_function=PreDataForVGG)  # 配置参数
+        preprocessing_function=PreDataForTF)  # 配置参数
 
     train_datagen = dataGenerator(**params)
-    test_datagen = dataGenerator(preprocessing_function=PreDataForVGG)
+    test_datagen = dataGenerator(preprocessing_function=PreDataForTF)
 
     train_generator = train_datagen.flow_from_directory(path,
                                                         batch_size=batch_train,
