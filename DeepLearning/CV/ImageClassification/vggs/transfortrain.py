@@ -1,5 +1,5 @@
 from tensorflow.keras import Input, optimizers
-from DeepLearning.CV.tools.ClassAug.readDir import dataGenerator, PreDataForVGG
+from DeepLearning.CV.tools.ClassAug.readDir import dataGenerator, PreDataForCaffe
 import math
 import os
 import glob
@@ -58,10 +58,10 @@ def train():
         zoom_range=0.2,
         horizontal_flip=True,
         vertical_flip=True,
-        preprocessing_function=PreDataForVGG)  # 配置参数
+        preprocessing_function=PreDataForCaffe)  # 配置参数
 
     train_datagen = dataGenerator(**params)
-    test_datagen = dataGenerator(preprocessing_function=PreDataForVGG)
+    test_datagen = dataGenerator(preprocessing_function=PreDataForCaffe)
 
     train_generator = train_datagen.flow_from_directory(path,
                                                         batch_size=batch_train,
@@ -80,13 +80,13 @@ def train():
                        input_tensor=inputs)
 
     fla = Flatten()(base_model.output)
-    x = Dense(1024, activation='relu')(fla)
-    x = Dropout(rate=0.5)(x)
+    # x = Dense(1024, activation='relu')(fla)
+    # x = Dropout(rate=0.5)(x)
     # x = Dense(256, activation='relu')(x)
     # x = Dropout(rate=0.5)(x)
-    x = Dense(128, activation='relu')(x)
-    x = Dropout(rate=0.5)(x)
-    x = Dense(n_classes, activation='softmax')(x)
+    # x = Dense(128, activation='relu')(x)
+    # x = Dropout(rate=0.5)(x)
+    x = Dense(n_classes, activation='softmax')(fla)
     model = Model(inputs=inputs, outputs=x)  # 完成Model构建
 
     for l in base_model.layers:
