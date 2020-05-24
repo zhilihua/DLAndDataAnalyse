@@ -11,7 +11,7 @@ import cv2
 import math
 
 ######################################数据预处理函数#######################################
-def PreDataForVGG(image): #vgg的数据预处理
+def PreDataForTF(image): #vgg的数据预处理,应用的是tf模式
     """
     :param image:图片数据
     :param label: 图片的标签
@@ -22,6 +22,26 @@ def PreDataForVGG(image): #vgg的数据预处理
     image /= 127.5
     image -= 1.
     return image
+
+def PreDataForCaffe(image): #resnet的数据预处理,应用的是caffe模式
+    """
+    :param image:图片数据
+    :param label: 图片的标签
+    :return: 处理后的数据和标签
+    """
+    x = image.astype(np.float32)
+    #进行归一化处理
+    x = x[..., ::-1]
+    mean = [103.939, 116.779, 123.68]
+    std = None
+    x[..., 0] -= mean[0]
+    x[..., 1] -= mean[1]
+    x[..., 2] -= mean[2]
+    if std is not None:
+        x[..., 0] /= std[0]
+        x[..., 1] /= std[1]
+        x[..., 2] /= std[2]
+    return x
 ##########################################################################################
 
 #####################################封装自带数据增强######################################
