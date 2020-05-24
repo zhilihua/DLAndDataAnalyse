@@ -1,7 +1,7 @@
 import numpy as np
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
-from DeepLearning.CV.tools.ClassAug.readDir import PreDataForVGG
+from DeepLearning.CV.tools.ClassAug.readDir import PreDataForTF
 import matplotlib.pyplot as plt
 from PIL import Image
 
@@ -11,7 +11,7 @@ def predict(model, img, target_size):
 
     x = image.img_to_array(img)
     x = np.expand_dims(x, axis=0)
-    x = PreDataForVGG(x)
+    x = PreDataForTF(x)    #重头训练和迁移学习都用TF模式
     preds = model.predict(x)
     return preds[0]
 
