@@ -167,7 +167,7 @@ class SSDInputEncoder:
             y_matched_anchors[:, :, -12:-8] = 0
             return y_encoded, y_matched_anchors
         else:
-            return y_encoded
+            return y_encoded   #[batch_sizes, total_boxes, [one_hot_label, [4个值为真实包围框], [4个值为锚点框] ,[4个值为var]]]
 
     def generate_anchor_boxes_for_layer(self,
                                         feature_map_size,
