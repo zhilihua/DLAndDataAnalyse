@@ -45,7 +45,7 @@ class SSDLoss:
         # 确保y_pred不包含任何零（这会破坏log功能）
         y_pred = tf.maximum(y_pred, 1e-15)
         # 计算log损失
-        log_loss = -tf.reduce_sum(y_true * tf.log(y_pred), axis=-1)
+        log_loss = -tf.reduce_sum(y_true * tf.math.log(y_pred), axis=-1)
         return log_loss
 
     def compute_loss(self, y_true, y_pred):
@@ -59,23 +59,23 @@ class SSDLoss:
         Returns:
             A scalar, the total multitask loss for classification and localization.
         '''
-        self.neg_pos_ratio = tf.constant(self.neg_pos_ratio)
-        self.n_neg_min = tf.constant(self.n_neg_min)
-        self.alpha = tf.constant(self.alpha)
+        # self.neg_pos_ratio = tf.constant(self.neg_pos_ratio)
+        # self.n_neg_min = tf.constant(self.n_neg_min)
+        # self.alpha = tf.constant(self.alpha)
 
         batch_size = tf.shape(y_pred)[0] # tf.int32
         n_boxes = tf.shape(y_pred)[1] # tf.int32, 注意，在这种情况下，“ n_boxes”表示每个图像的盒子总数，而不是每个单元格的盒子数量。
 
         # 1: 计算每个盒子的分类和盒子预测损失。
 
-        classification_loss = tf.to_float(self.log_loss(y_true[:, :, :-12], y_pred[:, :, :-12])) # 输出shape: (batch_size, n_boxes)
-        localization_loss = tf.to_float(self.smooth_L1_loss(y_true[:, :, -12:-8], y_pred[:, :, -12:-8])) # 输出shape: (batch_size, n_boxes)
+        classification_loss = tf.cast(self.log_loss(y_true[:, :, :-12], y_pred[:, :, :-12]), tf.float32) # 输出shape: (batch_size, n_boxes)
+        localization_loss = tf.cast(self.smooth_L1_loss(y_true[:, :, -12:-8], y_pred[:, :, -12:-8]), tf.float32) # 输出shape: (batch_size, n_boxes)
 
         # 2: 计算正负目标的分类损失。
 
         # 为正样本和负样本创建mask。
         negatives = y_true[:, :, 0] # shape (batch_size, n_boxes)
-        positives = tf.to_float(tf.reduce_max(y_true[:, :, 1:-12], axis=-1)) # shape (batch_size, n_boxes) 找出所有正样本标记为1
+        positives = tf.cast(tf.reduce_max(y_true[:, :, 1:-12], axis=-1), tf.float32) # shape (batch_size, n_boxes) 找出所有正样本标记为1
 
         # 计算整个批次中y_true中的肯定框（1至n类）的数量。
         n_positive = tf.reduce_sum(positives)   #正样本数量之和
@@ -83,8 +83,8 @@ class SSDLoss:
         pos_class_loss = tf.reduce_sum(classification_loss * positives, axis=-1) # shape (batch_size,)  #正样本损失函数之和
 
         neg_class_loss_all = classification_loss * negatives # shape (batch_size, n_boxes)
-        n_neg_losses = tf.count_nonzero(neg_class_loss_all, dtype=tf.int32)  #负样本个数之和
-        n_negative_keep = tf.minimum(tf.maximum(self.neg_pos_ratio * tf.to_int32(n_positive), self.n_neg_min), n_neg_losses)
+        n_neg_losses = tf.math.count_nonzero(neg_class_loss_all, dtype=tf.int32)  #负样本个数之和
+        n_negative_keep = tf.minimum(tf.maximum(self.neg_pos_ratio * tf.cast(n_positive, tf.int32), self.n_neg_min), n_neg_losses)
 
         # 在不太可能的情况下，要么（1）根本没有负面地面真理框，要么（2）所有负面框的分类损失为零，则返回零作为“ neg_class_loss”。
         def f1():
@@ -100,7 +100,7 @@ class SSDLoss:
             negatives_keep = tf.scatter_nd(indices=tf.expand_dims(indices, axis=1),
                                            updates=tf.ones_like(indices, dtype=tf.int32),
                                            shape=tf.shape(neg_class_loss_all_1D)) # shape (batch_size * n_boxes,)
-            negatives_keep = tf.to_float(tf.reshape(negatives_keep, [batch_size, n_boxes])) # shape (batch_size, n_boxes)
+            negatives_keep = tf.cast(tf.reshape(negatives_keep, [batch_size, n_boxes]), tf.float32) # shape (batch_size, n_boxes)
 
             neg_class_loss = tf.reduce_sum(classification_loss * negatives_keep, axis=-1) # shape (batch_size,)
             return neg_class_loss
@@ -114,6 +114,6 @@ class SSDLoss:
 
         # 4: 计算总损失
         total_loss = (class_loss + self.alpha * loc_loss) / tf.maximum(1.0, n_positive) # In case `n_positive == 0`
-        total_loss = total_loss * tf.to_float(batch_size)
+        total_loss = total_loss * tf.cast(batch_size, tf.float32)
 
         return total_loss
