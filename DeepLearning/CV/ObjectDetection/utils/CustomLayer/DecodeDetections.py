@@ -115,7 +115,7 @@ class DecodeDetections(Layer):
                 # 从一个张量(n_boxes, n_classes + 4 coordinates) 提取
                 # 一个张量 (n_boxes, 1 + 4 coordinates) 它包含一类的置信值，通过`index`确定。
                 confidences = tf.expand_dims(batch_item[..., index], axis=-1)
-                class_id = tf.fill(dims=tf.shape(confidences), value=tf.to_float(index))
+                class_id = tf.fill(dims=tf.shape(confidences), value=tf.cast(index, tf.float32))
                 box_coordinates = batch_item[..., -4:]
 
                 single_class = tf.concat([class_id, confidences, box_coordinates], axis=-1)
