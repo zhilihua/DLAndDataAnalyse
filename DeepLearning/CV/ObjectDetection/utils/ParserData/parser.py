@@ -218,8 +218,8 @@ class DataGenerator:
                 objects_to_shuffle.append(self.labels)
             if not (self.image_ids is None):
                 objects_to_shuffle.append(self.image_ids)
-            if not (self.eval_neutral is None):
-                objects_to_shuffle.append(self.eval_neutral)
+            # if not (self.eval_neutral is None):
+            #     objects_to_shuffle.append(self.eval_neutral)
             shuffled_objects = sklearn.utils.shuffle(*objects_to_shuffle)
             for i in range(len(objects_to_shuffle)):
                 objects_to_shuffle[i][:] = shuffled_objects[i]
@@ -253,8 +253,8 @@ class DataGenerator:
                         objects_to_shuffle.append(self.labels)
                     if not (self.image_ids is None):
                         objects_to_shuffle.append(self.image_ids)
-                    if not (self.eval_neutral is None):
-                        objects_to_shuffle.append(self.eval_neutral)
+                    # if not (self.eval_neutral is None):
+                    #     objects_to_shuffle.append(self.eval_neutral)
                     shuffled_objects = sklearn.utils.shuffle(*objects_to_shuffle)
                     for i in range(len(objects_to_shuffle)):
                         objects_to_shuffle[i][:] = shuffled_objects[i]
