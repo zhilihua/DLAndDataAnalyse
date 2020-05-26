@@ -88,7 +88,7 @@ def ssd_300(image_size,
         由于您始终可以通过Keras API轻松获得它们的大小，因此这并不是绝对必要的，但是以这种方式获得它们很方便且不易出错。
         无论如何，它们仅与训练有关（SSDBoxEncoder需要知道预测层的空间尺寸），因为推断您不需要它们。
     Returns:
-        model: Keras的SSD300模型。
+        models: Keras的SSD300模型。
         predictor_sizes (optional): 每个卷积预测层包含输出张量形状的（（height，width））部分的Numpy数组。
         在训练期间，生成器功能需要此功能，以便将地面真值标签转换为与模型的输出张量具有相同结构的张量，
         而成本函数又需要该张量。
