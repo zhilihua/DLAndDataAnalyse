@@ -11,6 +11,7 @@ import pickle
 import sklearn.utils
 from copy import deepcopy
 from Utils import BoxFilter
+import inspect
 
 class DataGenerator:
     def __init__(self,
@@ -105,6 +106,8 @@ class DataGenerator:
                            'horse', 'motorbike', 'person', 'pottedplant',
                            'sheep', 'sofa', 'train', 'tvmonitor'],
                   include_classes='all',
+                  exclude_truncated=False,
+                  exclude_difficult=False,
                   verbose=True):
         '''
         这是一个针对Pascal VOC数据集格式的解析器。
@@ -157,6 +160,7 @@ class DataGenerator:
                         soup = BeautifulSoup(f, 'xml')
 
                     boxes = []  # 存储这个照片的所有包围框。
+                    eval_neutr = []   #存储中性样本
                     objects = soup.find_all('object')  # 得到这张照片的所有对象列表。
 
                     # 解析每一个对象的数据。
@@ -165,6 +169,11 @@ class DataGenerator:
                         class_id = self.classes.index(class_name)
                         # 检查是否应将此类包含在数据集中。
                         if (not self.include_classes == 'all') and (not class_id in self.include_classes): continue
+                        pose = obj.find('pose', recursive=False).text
+                        truncated = int(obj.find('truncated', recursive=False).text)
+                        if exclude_truncated and (truncated == 1): continue
+                        difficult = int(obj.find('difficult', recursive=False).text)
+                        if exclude_difficult and (difficult == 1): continue
                         # 得到包围框的坐标。
                         bndbox = obj.find('bndbox', recursive=False)
                         xmin = int(bndbox.xmin.text)
@@ -183,8 +192,13 @@ class DataGenerator:
                         for item in self.labels_output_format:
                             box.append(item_dict[item])
                         boxes.append(box)
+                        if difficult:
+                            eval_neutr.append(True)
+                        else:
+                            eval_neutr.append(False)
 
                     self.labels.append(boxes)
+                    self.eval_neutral.append(eval_neutr)
 
         self.dataset_size = len(self.filenames)
         self.dataset_indices = np.arange(self.dataset_size, dtype=np.int32)
@@ -204,7 +218,8 @@ class DataGenerator:
                  batch_size=32,
                  shuffle=True,
                  transformations=[],
-                 label_encoder=None
+                 label_encoder=None,
+                 returns={}
                  ):
         #label_encoder传入的是编码训练数据模块
         #############################################################################################
@@ -218,8 +233,8 @@ class DataGenerator:
                 objects_to_shuffle.append(self.labels)
             if not (self.image_ids is None):
                 objects_to_shuffle.append(self.image_ids)
-            # if not (self.eval_neutral is None):
-            #     objects_to_shuffle.append(self.eval_neutral)
+            if not (self.eval_neutral is None):
+                objects_to_shuffle.append(self.eval_neutral)
             shuffled_objects = sklearn.utils.shuffle(*objects_to_shuffle)
             for i in range(len(objects_to_shuffle)):
                 objects_to_shuffle[i][:] = shuffled_objects[i]
@@ -253,8 +268,8 @@ class DataGenerator:
                         objects_to_shuffle.append(self.labels)
                     if not (self.image_ids is None):
                         objects_to_shuffle.append(self.image_ids)
-                    # if not (self.eval_neutral is None):
-                    #     objects_to_shuffle.append(self.eval_neutral)
+                    if not (self.eval_neutral is None):
+                        objects_to_shuffle.append(self.eval_neutral)
                     shuffled_objects = sklearn.utils.shuffle(*objects_to_shuffle)
                     for i in range(len(objects_to_shuffle)):
                         objects_to_shuffle[i][:] = shuffled_objects[i]
@@ -269,22 +284,39 @@ class DataGenerator:
             else:
                 batch_y = None
 
+            if not (self.image_ids is None):
+                batch_image_ids = self.image_ids[current:current + batch_size]
+            else:
+                batch_image_ids = None
+
             current += batch_size
 
             batch_items_to_remove = []   #需要移除的数据
+            batch_inverse_transforms = []
+
             for i in range(len(batch_X)):
                 if not (self.labels is None):
                     batch_y[i] = np.array(batch_y[i])
 
                 # 应用我们得到的图片增广
                 if transformations:
+                    inverse_transforms = []
                     for transform in transformations:
                         if not (self.labels is None):
-                            batch_X[i], batch_y[i] = transform(batch_X[i], batch_y[i])
+                            if ('inverse_transform' in returns) and ('return_inverter' in inspect.signature(transform).parameters):
+                                batch_X[i], batch_y[i], inverse_transform = transform(batch_X[i], batch_y[i],
+                                                                                      return_inverter=True)
+                                inverse_transforms.append(inverse_transform)
+                            else:
+                                batch_X[i], batch_y[i] = transform(batch_X[i], batch_y[i])
                             if (batch_y[i].size == 0):
                                 batch_items_to_remove.append(i)
+                                batch_inverse_transforms.append([])
+                                continue
                         else:
                             batch_X[i] = transform(batch_X[i])
+
+                    batch_inverse_transforms.append(inverse_transforms[::-1])
 
                 if not (self.labels is None):
 
@@ -303,6 +335,8 @@ class DataGenerator:
             for j in sorted(batch_items_to_remove, reverse=True):
                 batch_X.pop(j)
                 batch_y.pop(j)
+                if not (self.image_ids is None): batch_image_ids.pop(j)
+                if batch_inverse_transforms: batch_inverse_transforms.pop(j)
 
             batch_X = np.array(batch_X)
             #########################################################################################
@@ -317,6 +351,8 @@ class DataGenerator:
             ret = []
             ret.append(batch_X)
             ret.append(batch_y_encoded)
+            if 'image_ids' in returns: ret.append(batch_image_ids)
+            if 'inverse_transform' in returns: ret.append(batch_inverse_transforms)
 
             yield tuple(ret)
 
