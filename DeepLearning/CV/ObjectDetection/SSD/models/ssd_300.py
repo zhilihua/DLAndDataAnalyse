@@ -132,7 +132,7 @@ def ssd_300(image_size,
     def input_stddev_normalization(tensor):
         return tensor / np.array(divide_by_stddev)
 
-    def input_channel_swap(tensor):   #进行BRG转RGB
+    def input_channel_swap(tensor):   #进行RGB转BGR
         if len(swap_channels) == 3:
             return K.stack([tensor[..., swap_channels[0]], tensor[..., swap_channels[1]], tensor[..., swap_channels[2]]], axis=-1)
         elif len(swap_channels) == 4:
