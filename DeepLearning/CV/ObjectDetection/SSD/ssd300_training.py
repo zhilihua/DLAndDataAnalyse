@@ -123,7 +123,7 @@ val_dataset.parse_xml(images_dirs=[VOC_2007_images_dir],
                       exclude_difficult=True,
                       )
 
-batch_size = 32
+batch_size = 16
 
 ssd_data_augmentation = DataAugmentation(img_height=img_height,    #进行数据增广
                                             img_width=img_width,
